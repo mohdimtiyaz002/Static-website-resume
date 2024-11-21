@@ -11,13 +11,24 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v3
 
+    - name: Azure Login
+      run: |
+        az login --username "${{ secrets.AZURE_USERNAME }}" --password "${{ secrets.AZURE_PASSWORD }}"
+
+ 
+    # Set the subscription and resource group
+    - name: Set Azure Context
+      run: |
+        az account set --subscription "${{ secrets.SUBSCRIPTION_ID }}"
+        az group show --name staticwebsite || echo "Resource group not found."
+
+
     - name: Upload to Blob Storage
       uses: azure/CLI@v1
       with:
         inlineScript: |
           az storage blob upload-batch --account-name ${{secrets.AZURE_STORAGE_NAME}} --account-key ${{ secrets.AZURE_STORAGE_KEY }} --auth-mode key --overwrite -d '$web' -s .
-         # az storage blob upload-batch -d mycontainer --account-name mystorageaccount --account-key 00000000 -s <path-to-directory> --pattern "*.py" --if-unmodified-since 2018-08-27T20:51Z
-         
+          
     - name: Purge CDN Endpoint
       uses: azure/CLI@v1
       with:
